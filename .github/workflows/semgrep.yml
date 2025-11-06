@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # (디버그) 실제로 어떤 PHP 파일을 스캔하는지 보여주기
+      # (디버그) 실제로 스캔될 PHP 파일 확인
       - name: List PHP files
         run: |
           echo "Repo root: $PWD"
@@ -30,36 +30,42 @@ jobs:
           echo "Total PHP files:"
           find . -type f -name "*.php" | wc -l
 
-      # Semgrep 설치 (Cloud 토큰 없이 CLI로 고정)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
       - name: Install Semgrep & jq
         run: |
           pip install --upgrade pip semgrep
           sudo apt-get update && sudo apt-get install -y jq
 
-      # 스캔 실행: JSON + SARIF 동시 생성 (알럿 없어도 성공 종료)
-      - name: Run Semgrep (JSON + SARIF)
+      # 설정 파일(.semgrep/.semgrep.yml → .semgrep.yml → auto) 감지 + 리포트 폴더 준비
+      - name: Prepare config & reports dir
         run: |
-          # .semgrep.yml 있으면 사용, 없으면 auto
-          if [ -f ".semgrep.yml" ]; then
-            CONFIG="--config .semgrep.yml"
+          if [ -f ".semgrep/.semgrep.yml" ]; then
+            echo "CONFIG=.semgrep/.semgrep.yml" >> $GITHUB_ENV
+          elif [ -f ".semgrep.yml" ]; then
+            echo "CONFIG=.semgrep.yml" >> $GITHUB_ENV
           else
-            CONFIG="--config p/php --config p/security-audit --config p/secrets"
+            echo "CONFIG=auto" >> $GITHUB_ENV
           fi
-
           mkdir -p reports
 
-          # --error 는 ‘알럿 있을 때 실패’라 지금은 제거 (리포트만 만들기)
-          semgrep $CONFIG \
-            --metrics=off \
-            --timeout 10 \
-            --json --output reports/semgrep.json \
-            --sarif --output reports/semgrep.sarif || true
+      # ⚠️ JSON과 SARIF는 한 번에 출력 불가 → 두 번 스캔
+      - name: Semgrep JSON
+        run: |
+          semgrep scan --config "$CONFIG" \
+            --metrics=off --timeout 10 \
+            --json -o reports/semgrep.json || true
 
-      # GitHub Actions Job Summary(런 로그 위 상단)에 항상 요약 쓰기
+      - name: Semgrep SARIF
+        run: |
+          semgrep scan --config "$CONFIG" \
+            --metrics=off --timeout 10 \
+            --sarif -o reports/semgrep.sarif || true
+
+      # GitHub Actions Job Summary에 항상 요약 출력
       - name: Write Markdown Summary
         if: always()
         run: |
@@ -69,26 +75,22 @@ jobs:
             TOTAL=$(jq '.results | length' reports/semgrep.json)
             echo "- Total findings: **$TOTAL**" >> $GITHUB_STEP_SUMMARY
 
-            # 심각도별 집계 (없으면 0)
             for sev in ERROR WARNING INFO; do
               COUNT=$(jq --arg sev "$sev" '[.results[] | select(.extra.severity==$sev)] | length' reports/semgrep.json)
               echo "  - $sev: **$COUNT**" >> $GITHUB_STEP_SUMMARY
             done
 
-            # 상위 10개 룰/파일 미니 테이블
-            echo -e "\n### Top findings\n" >> $GITHUB_STEP_SUMMARY
+            echo -e "\n### Top findings (up to 10)\n" >> $GITHUB_STEP_SUMMARY
             jq -r '
               .results[]
               | {check_id, path: .path, start: .start.line, message: .extra.message, severity: .extra.severity}
               | "| \(.severity) | \(.check_id) | \(.path):\(.start) | \(.message | gsub("\\n"; " ")) |"
             ' reports/semgrep.json | head -n 10 >> $GITHUB_STEP_SUMMARY
-
-            echo -e "\n_(showing up to 10)_\n" >> $GITHUB_STEP_SUMMARY
           else
             echo "- Semgrep produced no JSON (likely no files matched). Check the **List PHP files** step above." >> $GITHUB_STEP_SUMMARY
           fi
 
-      # Code Scanning에 SARIF 업로드 (알럿 0이어도 업로드 시도)
+      # Code Scanning에 SARIF 업로드 (알럿 0이어도 시도)
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
