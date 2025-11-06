@@ -1,0 +1,30 @@
+configs:
+  - p/ci
+  - p/security-audit
+  - p/secrets
+  - p/php
+  - p/javascript
+exclude:
+  - node_modules
+  - vendor
+  - dist
+  - build
+  - .git
+  - .github
+  - "**/*.min.js"
+
+rules:
+  - id: wp-nonce-missing
+    languages: [php]
+    message: "WordPress form/action에 nonce 검증 누락 가능성. check_admin_referer()/wp_verify_nonce() 확인."
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern: |
+              function $F(...){ ... $_POST ... }
+          - pattern: |
+              add_action($HOOK, $CALLBACK);
+              function $CALLBACK(...){ ... $_POST ... }
+    paths:
+      include: ["**/*.php"]
+      exclude: ["vendor/**"]
