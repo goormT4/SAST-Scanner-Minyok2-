@@ -42,57 +42,74 @@ jobs:
 
       # 설정 파일(.semgrep/.semgrep.yml → .semgrep.yml → auto) 감지 + 리포트 폴더 준비
       - name: Prepare config & reports dir
+        shell: bash
         run: |
+          set -e
           if [ -f ".semgrep/.semgrep.yml" ]; then
-            echo "CONFIG=.semgrep/.semgrep.yml" >> $GITHUB_ENV
+            CONFIG_FILE=".semgrep/.semgrep.yml"
           elif [ -f ".semgrep.yml" ]; then
-            echo "CONFIG=.semgrep.yml" >> $GITHUB_ENV
+            CONFIG_FILE=".semgrep.yml"
           else
-            echo "CONFIG=auto" >> $GITHUB_ENV
+            CONFIG_FILE="auto"
           fi
+          echo "CONFIG=$CONFIG_FILE" >> "$GITHUB_ENV"
           mkdir -p reports
 
-      # ⚠️ JSON과 SARIF는 한 번에 출력 불가 → 두 번 스캔
+          echo "== CONFIG chosen =="
+          echo "$CONFIG_FILE"
+
+          echo "== List .semgrep dir (if any) =="
+          ls -la .semgrep || true
+
+          echo "== Show config (if file) =="
+          if [ -f "$CONFIG_FILE" ]; then
+            sed -n '1,200p' "$CONFIG_FILE"
+          fi
+
+      # JSON 출력 (에러 숨김 없음)
       - name: Semgrep JSON
         run: |
+          set -e
           semgrep scan --config "$CONFIG" \
             --metrics=off --timeout 10 \
-            --json -o reports/semgrep.json || true
+            --json -o reports/semgrep.json
 
+      # SARIF 출력 (에러 숨김 없음)
       - name: Semgrep SARIF
         run: |
+          set -e
           semgrep scan --config "$CONFIG" \
             --metrics=off --timeout 10 \
-            --sarif -o reports/semgrep.sarif || true
+            --sarif -o reports/semgrep.sarif
 
       # GitHub Actions Job Summary에 항상 요약 출력
       - name: Write Markdown Summary
         if: always()
         run: |
-          echo "## 🧪 Semgrep Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧪 Semgrep Summary" >> "$GITHUB_STEP_SUMMARY"
 
           if [ -s reports/semgrep.json ]; then
             TOTAL=$(jq '.results | length' reports/semgrep.json)
-            echo "- Total findings: **$TOTAL**" >> $GITHUB_STEP_SUMMARY
+            echo "- Total findings: **$TOTAL**" >> "$GITHUB_STEP_SUMMARY"
 
             for sev in ERROR WARNING INFO; do
               COUNT=$(jq --arg sev "$sev" '[.results[] | select(.extra.severity==$sev)] | length' reports/semgrep.json)
-              echo "  - $sev: **$COUNT**" >> $GITHUB_STEP_SUMMARY
+              echo "  - $sev: **$COUNT**" >> "$GITHUB_STEP_SUMMARY"
             done
 
-            echo -e "\n### Top findings (up to 10)\n" >> $GITHUB_STEP_SUMMARY
+            echo -e "\n### Top findings (up to 10)\n" >> "$GITHUB_STEP_SUMMARY"
             jq -r '
               .results[]
               | {check_id, path: .path, start: .start.line, message: .extra.message, severity: .extra.severity}
               | "| \(.severity) | \(.check_id) | \(.path):\(.start) | \(.message | gsub("\\n"; " ")) |"
-            ' reports/semgrep.json | head -n 10 >> $GITHUB_STEP_SUMMARY
+            ' reports/semgrep.json | head -n 10 >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- Semgrep produced no JSON (likely no files matched). Check the **List PHP files** step above." >> $GITHUB_STEP_SUMMARY
+            echo "- Semgrep produced no JSON (likely no files matched). Check the **List PHP files** step above." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # Code Scanning에 SARIF 업로드 (알럿 0이어도 시도)
+      # Code Scanning에 SARIF 업로드 (파일 있을 때만)
       - name: Upload SARIF
-        if: always()
+        if: always() && hashFiles('reports/semgrep.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/semgrep.sarif
