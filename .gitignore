@@ -1,0 +1,20 @@
+# PHP
+/vendor/
+/composer.lock
+
+# Node
+/node_modules/
+/dist/
+/build/
+/coverage/
+/*.log
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Others
+.env
+.env.*
