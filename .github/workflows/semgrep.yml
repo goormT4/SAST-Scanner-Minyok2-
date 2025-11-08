@@ -140,9 +140,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Write Markdown Summary
+      - name: Write Semgrep Markdown Summary
         if: always()
-        shell: bash
         run: |
           echo "## 🧪 Semgrep Summary" >> "$GITHUB_STEP_SUMMARY"
 
@@ -161,5 +160,8 @@ jobs:
               | {check_id, path: .path, start: .start.line, message: .extra.message, severity: .extra.severity} 
               | "| \(.severity) | \(.check_id) | \(.path):\(.start) | \(.message | gsub("\\n"; " ")) |"
             ' reports/semgrep.json | head -n 10 >> "$GITHUB_STEP_SUMMARY"
+
           else
             echo "- Semgrep produced no JSON (likely no matching files). Check the PHP file listing step." >> "$GITHUB_STEP_SUMMARY"
+          fi
+        shell: /usr/bin/bash
