@@ -11,9 +11,9 @@ configs:
 
 # 프로젝트 커스텀 규칙 파일들 (순서대로 적용)
 include:
-  - .semgrep/rules-xss.yml
-  - .semgrep/rules-upload.yml
-  - .semgrep/rules-sensitive.yml
+  - $GITHUB_WORKSPACE/.semgrep/rules-xss.yml
+  - $GITHUB_WORKSPACE/.semgrep/rules-upload.yml
+  - $GITHUB_WORKSPACE/.semgrep/rules-sensitive.yml
 
 # 기본 제외 (추가로 wp-includes/wp-admin도 필요하면 추가)
 exclude:
