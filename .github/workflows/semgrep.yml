@@ -1,4 +1,4 @@
-name: Semgrep Scan
+name: Semgrep
 
 on:
   push:
@@ -14,24 +14,27 @@ permissions:
 jobs:
   semgrep:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: List PHP files (debug)
+      - name: List PHP files
         run: |
           echo "Repo root: $PWD"
           find . -type f -name "*.php" | head -n 200
-          echo "Total PHP files:" $(find . -type f -name "*.php" | wc -l)
+          echo "Total PHP files:" 
+          find . -type f -name "*.php" | wc -l
 
-      - name: Setup Python & install Semgrep
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
+      - name: Install Semgrep & jq
         run: |
           pip install --upgrade pip semgrep
           sudo apt-get update && sudo apt-get install -y jq
@@ -39,27 +42,37 @@ jobs:
       - name: Prepare config & reports dir
         shell: bash
         run: |
-          mkdir -p reports
+          set -e
           if [ -f ".semgrep/.semgrep.yml" ]; then
-            echo "CONFIG=.semgrep/.semgrep.yml" >> "$GITHUB_ENV"
+            CONFIG_FILE=".semgrep/.semgrep.yml"
           elif [ -f ".semgrep.yml" ]; then
-            echo "CONFIG=.semgrep.yml" >> "$GITHUB_ENV"
+            CONFIG_FILE=".semgrep.yml"
           else
-            echo "CONFIG=auto" >> "$GITHUB_ENV"
+            CONFIG_FILE="auto"
           fi
-          echo "CONFIG=$CONFIG chosen"
-          echo "Listing .semgrep dir (if exists):"
+          echo "CONFIG=$CONFIG_FILE" >> "$GITHUB_ENV"
+          mkdir -p reports
+
+          echo "== CONFIG chosen =="
+          echo "$CONFIG_FILE"
+
+          echo "== List .semgrep dir (if any) =="
           ls -la .semgrep || true
 
-      - name: Run Semgrep Scan (JSON)
+          echo "== Show config (first 200 lines) =="
+          if [ -f "$CONFIG_FILE" ]; then
+            head -n 200 "$CONFIG_FILE"
+          fi
+
+      - name: Run Semgrep JSON
         shell: bash
         run: |
           set -e
           export LC_ALL=en_US.UTF-8
           export LANG=en_US.UTF-8
           export PYTHONUTF8=1
-          mkdir -p reports
 
+          mkdir -p reports
           if [ "$CONFIG" = "auto" ]; then
             semgrep scan \
               --config p/php \
@@ -76,15 +89,15 @@ jobs:
               --json -o reports/semgrep.json src/wp_plugins
           fi
 
-      - name: Run Semgrep Scan (SARIF)
+      - name: Run Semgrep SARIF
         shell: bash
         run: |
           set -e
           export LC_ALL=en_US.UTF-8
           export LANG=en_US.UTF-8
           export PYTHONUTF8=1
-          mkdir -p reports
 
+          mkdir -p reports
           if [ "$CONFIG" = "auto" ]; then
             semgrep scan \
               --config p/php \
@@ -102,7 +115,10 @@ jobs:
           fi
 
       - name: Upload SARIF (if exists)
+        if: always()
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -f reports/semgrep.sarif ]; then
             echo "Uploading SARIF to GitHub code scanning..."
@@ -114,10 +130,18 @@ jobs:
             echo "No SARIF found — skipping upload"
             ls -la reports || true
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-reports
+          path: reports/*
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Write Markdown Summary
+        if: always()
         shell: bash
         run: |
           echo "## 🧪 Semgrep Summary" >> "$GITHUB_STEP_SUMMARY"
@@ -139,11 +163,3 @@ jobs:
             ' reports/semgrep.json | head -n 10 >> "$GITHUB_STEP_SUMMARY"
           else
             echo "- Semgrep produced no JSON (likely no matching files). Check the PHP file listing step." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: semgrep-reports
-          path: reports/*
-          if-no-files-found: warn
-          retention-days: 14
