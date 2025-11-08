@@ -14,7 +14,7 @@ permissions:
 jobs:
   semgrep:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -22,13 +22,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # (디버그) 실제로 스캔될 PHP 파일 확인
       - name: List PHP files
         run: |
           echo "Repo root: $PWD"
-          find . -type f -name "*.php" | head -n 200
-          echo "Total PHP files:"
-          find . -type f -name "*.php" | wc -l
+          find . -type f -name "*.php" | head -n 20
+          echo "Total PHP files:" $(find . -type f -name "*.php" | wc -l)
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,11 +38,16 @@ jobs:
           pip install --upgrade pip semgrep
           sudo apt-get update && sudo apt-get install -y jq
 
-      # 설정 파일(.semgrep/.semgrep.yml → .semgrep.yml → auto) 감지 + 리포트 폴더 준비
       - name: Prepare config & reports dir
         shell: bash
         run: |
           set -e
+          # UTF-8 환경 강제
+          export LC_ALL=en_US.UTF-8
+          export LANG=en_US.UTF-8
+          export PYTHONUTF8=1
+
+          # config 선택
           if [ -f ".semgrep/.semgrep.yml" ]; then
             CONFIG_FILE=".semgrep/.semgrep.yml"
           elif [ -f ".semgrep.yml" ]; then
@@ -61,117 +64,59 @@ jobs:
           echo "== List .semgrep dir (if any) =="
           ls -la .semgrep || true
 
-          echo "== Show config (if file) =="
+          echo "== Show first 20 lines of config =="
           if [ -f "$CONFIG_FILE" ]; then
-            sed -n '1,200p' "$CONFIG_FILE"
+            head -n 20 "$CONFIG_FILE"
           fi
 
-
-
-      - name: Run Semgrep (JSON, no verbose/debug)
-        run: |
-          mkdir -p reports
-          # choose config explicitly if you want, else use auto packs
-          CFG=".semgrep/.semgrep.yml"
-          if [ ! -f "$CFG" ]; then CFG="auto"; fi
-          echo "Using config: $CFG"
-
-          # JSON run (no --verbose / --debug)
-          if [ "$CFG" = "auto" ]; then
-            semgrep scan --config p/php --config p/security-audit --config p/secrets \
-              --metrics=off --timeout 60 --json -o reports/semgrep.json src/wp_plugins
-          else
-            semgrep scan --config "$CFG" --metrics=off --timeout 60 --json -o reports/semgrep.json src/wp_plugins
-          fi
-
-      - name: Run Semgrep (SARIF, no verbose/debug)
-        run: |
-          mkdir -p reports
-          CFG=".semgrep/.semgrep.yml"
-          if [ ! -f "$CFG" ]; then CFG="auto"; fi
-
-          if [ "$CFG" = "auto" ]; then
-            semgrep scan --config p/php --config p/security-audit --config p/secrets \
-              --metrics=off --timeout 60 --sarif -o reports/semgrep.sarif src/wp_plugins
-          else
-            semgrep scan --config "$CFG" --metrics=off --timeout 60 --sarif -o reports/semgrep.sarif src/wp_plugins
-          fi
-
-            # JSON 출력 (에러 숨김 없음)
-            - name: Semgrep JSON (debug mode — show stderr)
-              shell: bash
-              run: |
-                set -x
-                echo "=== semgrep version ==="
-                semgrep --version || true
-                echo
-
-                echo "=== show CONFIG env ==="
-                echo "CONFIG='$CONFIG'"
-                echo
-
-                echo "=== list .semgrep dir & files ==="
-                ls -la .semgrep || true
-                echo "=== show .semgrep/.semgrep.yml ==="
-                sed -n '1,200p' .semgrep/.semgrep.yml || true
-                echo
-
-                echo "=== attempt semgrep with --debug (capture stdout/stderr) ==="
-                mkdir -p reports
-                semgrep scan --config "$CONFIG" --metrics=off --timeout 10 --json -o reports/semgrep.json --debug > reports/semgrep-debug.out 2> reports/semgrep-debug.err || true
-
-                echo "---- semgrep stdout (last 200 lines) ----"
-                tail -n 200 reports/semgrep-debug.out || true
-                echo "---- semgrep stderr (last 200 lines) ----"
-                tail -n 200 reports/semgrep-debug.err || true
-
-                if [ -s reports/semgrep.json ]; then
-                  echo "JSON produced with $(jq '.results | length' reports/semgrep.json) results"
-                else
-                  echo "No JSON produced"
-                fi
-
-                # fail if semgrep exit code was non-zero (remove if you want it to continue)
-                RET=$?
-                echo "SEMgrep exit code: $RET"
-                exit $RET
-
-
-      # Semgrep SARIF (시도하되 실패해도 에러 출력 파일을 남기고 계속 진행)
-      - name: Semgrep SARIF (attempt, capture stderr)
+      - name: Run Semgrep (JSON)
         shell: bash
         run: |
-          set -x
-          mkdir -p reports
-          # 환경 인코딩 강제 (인코딩 문제 예방)
+          set -e
           export LC_ALL=en_US.UTF-8
           export LANG=en_US.UTF-8
           export PYTHONUTF8=1
 
-          # 시도하면서 stdout/stderr 파일에 저장
-          semgrep scan --config ".semgrep/.semgrep.yml" \
-            --metrics=off --timeout 10 \
-            --sarif -o reports/semgrep.sarif > reports/semgrep-sarif.out 2> reports/semgrep-sarif.err || true
-
-          echo "=== semgrep SARIF stdout (tail) ==="
-          tail -n 200 reports/semgrep-sarif.out || true
-          echo "=== semgrep SARIF stderr (tail) ==="
-          tail -n 200 reports/semgrep-sarif.err || true
-
-          # 만약 직접 생성한 reports/semgrep.sarif이 없으면(semgrep 실패 등), reports 폴더에서 첫번째 sarif 파일을 찾아 semgrep.sarif로 복사/이동
-          if [ ! -f reports/semgrep.sarif ]; then
-            FOUND=$(find reports -maxdepth 1 -type f -name '*.sarif' | head -n1 || true)
-            if [ -n "$FOUND" ]; then
-              echo "Found existing sarif: $FOUND -> normalize to reports/semgrep.sarif"
-              mv -f "$FOUND" reports/semgrep.sarif
-            else
-              echo "No sarif file found after semgrep --sarif attempt"
-            fi
+          if [ "$CONFIG" = "auto" ]; then
+            semgrep scan \
+              --config p/php \
+              --config p/security-audit \
+              --config p/secrets \
+              --metrics=off \
+              --timeout 60 \
+              --json -o reports/semgrep.json src/wp_plugins
           else
-            echo "reports/semgrep.sarif exists (created by semgrep)"
+            semgrep scan \
+              --config "$CONFIG" \
+              --metrics=off \
+              --timeout 60 \
+              --json -o reports/semgrep.json src/wp_plugins
           fi
 
-      # SARIF 업로드: 파일이 있으면 업로드, 없으면 경고만 남김
+      - name: Run Semgrep (SARIF)
+        shell: bash
+        run: |
+          set -e
+          export LC_ALL=en_US.UTF-8
+          export LANG=en_US.UTF-8
+          export PYTHONUTF8=1
+
+          if [ "$CONFIG" = "auto" ]; then
+            semgrep scan \
+              --config p/php \
+              --config p/security-audit \
+              --config p/secrets \
+              --metrics=off \
+              --timeout 60 \
+              --sarif -o reports/semgrep.sarif src/wp_plugins
+          else
+            semgrep scan \
+              --config "$CONFIG" \
+              --metrics=off \
+              --timeout 60 \
+              --sarif -o reports/semgrep.sarif src/wp_plugins
+          fi
+
       - name: Upload SARIF (if exists)
         if: always()
         run: |
@@ -181,15 +126,12 @@ jobs:
               /repos/${{ github.repository }}/code-scanning/sarifs \
               -F "sarif=@reports/semgrep.sarif" \
               -F "commit_sha=${{ github.sha }}" || true
-            echo "Note: If you prefer using github/codeql-action/upload-sarif, replace this step."
           else
-            echo "No reports/semgrep.sarif found — skipping upload"
+            echo "No SARIF found — skipping upload"
             ls -la reports || true
-          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 항상 리포트 보존 (아티팩트)
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -199,16 +141,14 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-
-
-      # GitHub Actions Job Summary에 항상 요약 출력
       - name: Write Markdown Summary
         if: always()
+        shell: bash
         run: |
           echo "## 🧪 Semgrep Summary" >> "$GITHUB_STEP_SUMMARY"
 
           if [ -s reports/semgrep.json ]; then
-            TOTAL=$(jq '.results | length' reports/semgrep.json)
+            TOTAL=$(jq '.results | length // 0' reports/semgrep.json)
             echo "- Total findings: **$TOTAL**" >> "$GITHUB_STEP_SUMMARY"
 
             for sev in ERROR WARNING INFO; do
@@ -223,7 +163,4 @@ jobs:
               | "| \(.severity) | \(.check_id) | \(.path):\(.start) | \(.message | gsub("\\n"; " ")) |"
             ' reports/semgrep.json | head -n 10 >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- Semgrep produced no JSON (likely no files matched). Check the **List PHP files** step above." >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-
+            echo "- Semgrep produced no JSON (likely no matching files). Check the PHP file listing step." >> "$GITHUB_STEP_SUMMARY"
