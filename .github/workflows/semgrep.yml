@@ -106,35 +106,67 @@ jobs:
           exit $RET
 
 
-      # SARIF 출력 (에러 숨김 없음)
-      - name: Semgrep SARIF
+      # Semgrep SARIF (시도하되 실패해도 에러 출력 파일을 남기고 계속 진행)
+      - name: Semgrep SARIF (attempt, capture stderr)
+        shell: bash
         run: |
-          set -e
+          set -x
+          mkdir -p reports
+          # 환경 인코딩 강제 (인코딩 문제 예방)
+          export LC_ALL=en_US.UTF-8
+          export LANG=en_US.UTF-8
+          export PYTHONUTF8=1
+
+          # 시도하면서 stdout/stderr 파일에 저장
           semgrep scan --config ".semgrep/.semgrep.yml" \
             --metrics=off --timeout 10 \
-            --sarif -o reports/semgrep.sarif
+            --sarif -o reports/semgrep.sarif > reports/semgrep-sarif.out 2> reports/semgrep-sarif.err || true
 
-      # Semgrep SARIF 스텝 이후에 추가
-      - name: Normalize SARIF filename
-        run: |
-          set -e
-          mkdir -p reports
-          FIRST_SARIF=$(find reports -maxdepth 1 -type f -name '*.sarif' | head -n 1 || true)
-          echo "Found: $FIRST_SARIF"
-          if [ -n "$FIRST_SARIF" ]; then
-            mv -f "$FIRST_SARIF" reports/semgrep.sarif
+          echo "=== semgrep SARIF stdout (tail) ==="
+          tail -n 200 reports/semgrep-sarif.out || true
+          echo "=== semgrep SARIF stderr (tail) ==="
+          tail -n 200 reports/semgrep-sarif.err || true
+
+          # 만약 직접 생성한 reports/semgrep.sarif이 없으면(semgrep 실패 등), reports 폴더에서 첫번째 sarif 파일을 찾아 semgrep.sarif로 복사/이동
+          if [ ! -f reports/semgrep.sarif ]; then
+            FOUND=$(find reports -maxdepth 1 -type f -name '*.sarif' | head -n1 || true)
+            if [ -n "$FOUND" ]; then
+              echo "Found existing sarif: $FOUND -> normalize to reports/semgrep.sarif"
+              mv -f "$FOUND" reports/semgrep.sarif
+            else
+              echo "No sarif file found after semgrep --sarif attempt"
+            fi
           else
-            echo "No sarif file found in reports/"
-            ls -la reports || true
-            exit 1
+            echo "reports/semgrep.sarif exists (created by semgrep)"
           fi
 
-      # Upload SARIF (use existing upload action)
-      - name: Upload SARIF
-        if: always() && hashFiles('reports/semgrep.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+      # SARIF 업로드: 파일이 있으면 업로드, 없으면 경고만 남김
+      - name: Upload SARIF (if exists)
+        if: always()
+        run: |
+          if [ -f reports/semgrep.sarif ]; then
+            echo "Uploading SARIF to GitHub code scanning..."
+            gh api --method POST -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/code-scanning/sarifs \
+              -F "sarif=@reports/semgrep.sarif" \
+              -F "commit_sha=${{ github.sha }}" || true
+            echo "Note: If you prefer using github/codeql-action/upload-sarif, replace this step."
+          else
+            echo "No reports/semgrep.sarif found — skipping upload"
+            ls -la reports || true
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 항상 리포트 보존 (아티팩트)
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: reports/semgrep.sarif
+          name: semgrep-reports
+          path: reports/*
+          if-no-files-found: warn
+          retention-days: 14
 
 
 
@@ -164,12 +196,3 @@ jobs:
           fi
 
 
-      # 리포트 파일 보존(다운로드용)
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: semgrep-reports
-          path: reports/*
-          if-no-files-found: warn
-          retention-days: 14
