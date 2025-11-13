@@ -26,8 +26,14 @@ jobs:
         shell: bash
         run: |
           echo "Repo root: $PWD"
-          find . -type f -name "*.php" | head -n 200
-          echo "Total PHP files:" $(find . -type f -name "*.php" | wc -l)
+
+          # print up to 200 php files but ignore broken-pipe errors from head
+          echo "First up to 200 PHP files (truncated):"
+          find . -type f -name "*.php" | head -n 200 || true
+
+          # get total count in a separate command (no pipe to head)
+          echo "Total PHP files:"
+          find . -type f -name "*.php" | wc -l
 
       - name: Set up Python
         uses: actions/setup-python@v5
