@@ -1,1 +1,0 @@
-IMPORTANT NOTICE: if you do your custom translations, please copy po and mo files to the /wp-content/languages/plugins/ folder
