@@ -1,0 +1,217 @@
+rules:
+  # --- SQLi rules ---
+  - id: wp-sqli-taint-basic
+    message: >
+      [보안 위험] 잠재적인 SQL 인젝션(SQLi)입니다.
+      사용자 입력이 $wpdb->prepare()를 거치지 않고 $wpdb 함수로 전달되었습니다.
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      project-focus: "SQL Injection"
+    pattern-sources:
+      - pattern: $_GET[$X]
+      - pattern: $_POST[$X]
+      - pattern: $_REQUEST[$X]
+    pattern-sanitizers:
+      - pattern: $wpdb->prepare(...)
+      - pattern: esc_sql($X)
+      - pattern: intval($X)
+      - pattern: absint($X)
+      - pattern: (int) $X
+    pattern-sinks:
+      - pattern: $wpdb->query($SINK, ...)
+      - pattern: $wpdb->get_results($SINK, ...)
+      - pattern: $wpdb->get_var($SINK, ...)
+      - pattern: $wpdb->get_row($SINK, ...)
+      - pattern: $wpdb->get_col($SINK, ...)
+
+  # --- XSS rules ---
+  - id: wp-xss-taint-to-output
+    message: "XSS: user-controlled data flows to output without escaping."
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    pattern-sources:
+      - pattern: $_GET[$X]
+      - pattern: $_POST[$X]
+      - pattern: $_REQUEST[$X]
+      - pattern: $_COOKIE[$X]
+    pattern-sanitizers:
+      - pattern: esc_html($X)
+      - pattern: esc_attr($X)
+      - pattern: esc_url($X)
+      - pattern: esc_js($X)
+      - pattern: wp_kses($X, $ALLOWED)
+      - pattern: wp_kses_post($X)
+      - pattern: sanitize_text_field($X)
+      - pattern: sanitize_user($X, ...)
+      - pattern: sanitize_email($X)
+      - pattern: htmlspecialchars($X, ...)
+      - pattern: strip_tags($X)
+    pattern-sinks:
+      - pattern: echo $SINK;
+      - pattern: print $SINK;
+      - pattern: printf($F, $SINK, ...);
+      - pattern: vprintf($F, $SINKS);
+      - pattern: echo sprintf($F, $SINK, ...);
+      - pattern: print sprintf($F, $SINK, ...);
+
+  # --- CMDi rules ---
+  - id: wp-command-injection-taint
+    message: >
+      [보안 위험] 치명적인 OS 커맨드 인젝션(RCE)입니다.
+      사용자 입력이 escapeshellarg() 처리 없이 시스템 명령어 함수로 전달되었습니다.
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    metadata:
+      cwe: "CWE-78: OS Command Injection"
+      project-focus: "RCE"
+    pattern-sources:
+      - pattern: $_GET[$X]
+      - pattern: $_POST[$X]
+      - pattern: $_REQUEST[$X]
+    pattern-sanitizers:
+      - pattern: escapeshellcmd($X)
+      - pattern: escapeshellarg($X)
+      - pattern: intval($X)
+      - pattern: (int) $X
+    pattern-sinks:
+      - pattern: system($SINK, ...)
+      - pattern: exec($SINK, ...)
+      - pattern: passthru($SINK, ...)
+      - pattern: shell_exec($SINK, ...)
+      - pattern: pcntl_exec($SINK, ...)
+      - pattern: popen($SINK, ...)
+      - pattern: "`...$SINK...`"
+
+  # --- Upload rules ---
+  - id: wp-file-upload-move-raw
+    languages: [php]
+    severity: ERROR
+    message: "File upload saved without explicit type/extension checks."
+    metadata:
+      cwe: "CWE-434"
+      category: security
+    pattern: move_uploaded_file($_FILES[$X]['tmp_name'], $DEST);
+
+  - id: wp-file-upload-handle-basic
+    languages: [php]
+    severity: WARNING
+    message: "wp_handle_upload used; ensure filetype/extension validation and sanitize_file_name."
+    metadata:
+      cwe: "CWE-434"
+      category: security
+    pattern: wp_handle_upload($_FILES[$X], ...);
+
+  - id: wp-file-upload-into-webroot
+    languages: [php]
+    severity: WARNING
+    message: "Uploaded file moved into webroot; ensure executables are disallowed."
+    metadata:
+      cwe: "CWE-434"
+      category: security
+    patterns:
+      - pattern: |
+          $dest = $DIR . $_FILES[$X]['name'];
+          ...
+          move_uploaded_file($_FILES[$X]['tmp_name'], $dest);
+
+  # --- CSRF rules ---
+  - id: wp-missing-nonce-check-admin-post-update_option
+    message: >
+      [보안 위험] admin_post_ 액션으로 등록된 콜백에서 update_option 호출이 있습니다.
+      Nonce 체크(check_admin_referer 등)가 있는지 수동으로 확인하세요.
+    languages: [php]
+    severity: ERROR
+    pattern: |
+      function $FUNC(...) {
+        ...
+      }
+      ...
+      add_action('admin_post_...', $FUNC);
+      ...
+      update_option(...);
+
+  - id: wp-missing-nonce-check-admin-post-delete_option
+    message: >
+      [보안 위험] admin_post_ 액션으로 등록된 콜백에서 delete_option 호출이 있습니다.
+      Nonce 체크 존재 여부를 확인하세요.
+    languages: [php]
+    severity: ERROR
+    pattern: |
+      function $FUNC(...) {
+        ...
+      }
+      ...
+      add_action('admin_post_...', $FUNC);
+      ...
+      delete_option(...);
+
+  - id: wp-missing-nonce-check-wp-ajax-update_option
+    message: >
+      [보안 위험] wp_ajax_ 액션으로 등록된 콜백에서 update_option 호출이 있습니다.
+      Nonce 체크 존재 여부를 확인하세요.
+    languages: [php]
+    severity: ERROR
+    pattern: |
+      function $FUNC(...) {
+        ...
+      }
+      ...
+      add_action('wp_ajax_...', $FUNC);
+      ...
+      update_option(...);
+
+  - id: wp-missing-nonce-check-wp-ajax-delete_option
+    message: >
+      [보안 위험] wp_ajax_ 액션으로 등록된 콜백에서 delete_option 호출이 있습니다.
+      Nonce 체크 존재 여부를 확인하세요.
+    languages: [php]
+    severity: ERROR
+    pattern: |
+      function $FUNC(...) {
+        ...
+      }
+      ...
+      add_action('wp_ajax_...', $FUNC);
+      ...
+      delete_option(...);
+
+  # --- wp-auth-misc rules ---
+  - id: wp-rest-api-insecure-permissions
+    message: >
+      [보안 위험] REST API 권한 검사(permission_callback) 누락 가능성.
+      permission_callback이 '__return_true'로 설정되었거나 register_rest_route에
+      인자가 직접 전달되는 경우를 탐지합니다. (수동 확인 필요)
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-862: Missing Authorization"
+      project-focus: "권한상승, 인증우회"
+    pattern-either:
+      - pattern: |
+          register_rest_route(..., ..., [
+            ...,
+            'permission_callback' => '__return_true',
+            ...
+          ]);
+      - pattern: |
+          register_rest_route(..., ..., $ARGS);
+
+  - id: php-unserialize-from-input
+    message: >
+      [보안 위험] 안전하지 않은 역직렬화(RCE) 위험입니다.
+      사용자 입력을 직접 unserialize() 함수에 사용하고 있습니다.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      project-focus: "RCE"
+    pattern-either:
+      - pattern: unserialize($_GET[...]);
+      - pattern: unserialize($_POST[...]);
+      - pattern: unserialize($_REQUEST[...]);
+      - pattern: unserialize($_COOKIE[...]);
