@@ -1,0 +1,1172 @@
+.gifthunt{
+  &-badge{
+    display: inline-block;
+    padding: .25em .4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+
+    &--active{
+      color: #fff;
+      background-color: #28a745;
+    }
+
+    &--inactive{
+      color: #212529;
+      background-color: #f8f9fa;
+    }
+  }
+
+  &-helptext{
+    color: #888;
+    margin: 2rem auto;
+    text-align: center;
+
+    p{
+      border: 1px solid #ddd;
+      border-radius: 2rem;
+      display: inline-block;
+      padding: 1rem 2rem;
+    }
+
+    &__icon{
+      display: inline-block;
+      height: 1rem;
+      margin: 0 1rem 0 0;
+      width: 1rem;
+
+      svg{
+        display: block;
+        fill: #0073aa;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  &-external-link-icon{
+    display: inline-block;
+    height: 1rem;
+    width: 1rem;
+    max-height: 100%;
+    max-width: 100%;
+    margin: auto;
+
+    svg{
+      display: block;
+      fill: #0073aa;
+      margin-top: 4px;
+    }
+  }
+
+  &-form{
+    display: flex;
+    margin-top: 60px;
+    max-width: 900px;
+
+    &__form{
+      flex: 2;
+    }
+
+    &__sidebar{
+      flex: 1;
+      padding-left: 20px;
+    }
+
+    &-result{
+      margin: 10px 0;
+      position: relative;
+
+      &--error{
+        background-color: #f9e2e2;
+        border-left: 3px solid #d94f4f;
+      }
+
+      &--success{
+        background-color: #eff9f1;
+        border-left: 3px solid #4ab866;
+      }
+
+      &__content{
+        margin: 1em 25px 1em 0;
+        padding: 20px 12px;
+
+        ul{
+          list-style: disc;
+          margin: 20px 0 20px 20px;
+
+          li{
+            margin: 0 0 15px 10px;
+            padding: 0 0 0 5px;
+          }
+        }
+      }
+
+      &__modal{
+        align-items: center;
+        background: rgba(0, 0, 0, .5);
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        left: 0;
+        overflow-y: auto;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 10000;
+
+        &-content{
+          margin: 0 auto;
+          max-width: 500px;
+          width: 100%;
+        }
+      }
+
+      &__modal.hidden{
+        display: none;
+      }
+
+      &__close-button{
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        height: 30px;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 30px;
+      }
+    }
+
+    &__delete-confirm-modal, &__test-mail-modal, &__delete-hunter-confirm-modal, &__success-email-template-preview-modal, &__shortcode-preview-alert-modal{
+      align-items: center;
+      background: rgba(0, 0, 0, .5);
+      display: flex;
+      height: 100%;
+      justify-content: center;
+      left: 0;
+      overflow-y: auto;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 10000;
+
+      &-content{
+        background: #fff;
+        border-radius: 3px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, .5);
+        margin: 0 auto;
+        max-width: 500px;
+        position: relative;
+        width: 100%;
+
+        h3{
+          border-bottom: 1px solid #eee;
+          margin: 0 0 20px 0;
+          padding: 20px;
+        }
+
+        p{
+          border-bottom: 1px solid #eee;
+          margin: 0 0 20px 0;
+          padding: 0 20px 20px;
+        }
+
+        label, input{
+          margin: 0 20px;
+        }
+
+        input{
+          margin-bottom: 10px;
+        }
+
+        ol{
+          margin: 1rem;
+          padding: 1rem;
+        }
+      }
+
+      &__close-button{
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        height: 30px;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 30px;
+      }
+    }
+
+    &__delete-confirm-actions, &__test-mail-actions {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px 20px;
+    }
+
+    &__delete-confirm-modal.hidden, &__test-mail-modal.hidden, &__delete-hunter-confirm-modal.hidden, &__success-email-template-preview-modal.hidden, &__shortcode-preview-alert-modal.hidden{
+      display: none;
+    }
+
+    &__popup-design-preview-modal{
+      align-items: center;
+      background: rgba(0, 0, 0, .8);
+      display: flex;
+      height: 100%;
+      justify-content: center;
+      left: 0;
+      overflow-y: scroll;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 99999;
+
+      img{
+        border-radius: 3px;
+        box-shadow: 0px 0px 30px rgba(0, 0, 0, .8);
+        cursor: pointer;
+      }
+    }
+
+    &__popup-design-preview-modal.hidden{
+      display: none;
+    }
+
+    &__success-email-template-preview-modal{
+      &-body{
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+        padding: 0 15px 15px;
+
+        img{
+          width: 100%;
+        }
+      }
+    }
+
+  }
+
+  &-card{
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    margin: 10px 0;
+    padding: 0;
+
+    &__columns{
+      display: flex;
+    }
+
+    &__column{
+      flex: 1;
+      padding: 0 20px 0 0;
+    }
+
+    &__column:last-child{
+      padding-right: 0;
+    }
+
+    &__title{
+      margin: 0;
+      padding: 0;
+    }
+
+    &__section{
+      border-bottom: 1px solid #eee;
+      padding: 20px;
+
+      &--secondary{
+        background: #f5f5f5;
+        border-bottom: 1px solid #e3e3e3;
+      }
+
+      &--closed, &--opened{
+        padding: 0;
+
+        .gifthunt-form-group__label{
+          padding: 10px 0 10px 10px;
+
+          span{
+            display: inline-block;
+            margin-right: 10px;
+          }
+        }
+
+        .gifthunt-form-group__body{
+          padding: 20px;
+        }
+      }
+
+      &--closed{
+        .gifthunt-form-group__label{
+          background: #ebebeb;
+          border-bottom: 1px solid #eee;
+        }
+
+        .gifthunt-form-group__body{
+          display: none;
+        }
+      }
+
+      &--opened{
+        .gifthunt-form-group__label{
+          background: #f5f5f5;
+          border-bottom: 1px solid #eee;
+
+          span{
+            transform: rotate(90deg);
+          }
+        }
+
+        .gifthunt-form-group__body{
+          display: block;
+        }
+      }
+    }
+
+    &__section:last-child{
+      border-bottom: none;
+    }
+  }
+
+  &-form-group{
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto 1.5rem;
+
+    &__label{
+      cursor: pointer;
+      font-size: .9rem;
+      font-weight: bold;
+      line-height: 2rem;
+    }
+
+    label{
+      cursor: pointer;
+      line-height: 2rem;
+    }
+
+    input[type="text"], input[type="email"], input[type="number"], input[type="url"], select, option{
+      height: 2.5rem;
+      line-height: 2.5rem;
+    }
+
+    .button.button-hero{
+      height: 2.5rem;
+      line-height: 2.5rem;
+      min-height: 2.5rem;
+    }
+
+    select{
+      max-width: 100%;
+      width: 100%;
+    }
+
+    input::placeholder{
+      color: rgb(194, 194, 194);
+      font-style: italic;
+    }
+
+    input.gifthunt-field-error{
+      background-color: #fbeae5;
+      border-color: #bf0711;
+    }
+
+    textarea.gifthunt-field-error{
+      background-color: #fbeae5;
+      border-color: #bf0711;
+    }
+
+    &__help-text{
+      color: #888;
+      margin: .5rem 0;
+      padding: 0;
+    }
+
+    &__body{
+      label{
+        display: block;
+      }
+    }
+  }
+
+  &-form-group:last-child{
+    margin-bottom: 0;
+  }
+
+  &-input-group{
+    display: flex;
+
+    input{
+      flex: 1;
+    }
+
+    button{
+      height: 2.5rem !important;
+      line-height: 2.5rem !important;
+      margin-left: 20px !important;
+      color: #bf0711 !important;
+    }
+  }
+
+  &--hidden{
+    display: none;
+  }
+
+  &-page-actions{
+    align-items: center;
+    border-top: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    max-width: 900px;
+    padding: 20px 0;
+
+    &--header{
+      border-top: none;
+      justify-content: flex-end;
+      margin: 0;
+      padding: 10px 0;
+
+      .button{
+        margin-left: 20px;
+      }
+
+      h1{
+        width: 100%;
+
+        small{
+          font-size: 13px;
+        }
+      }
+    }
+  }
+
+  &-button{
+    i{
+      display: inline-flex;
+      height: 100%;
+
+      svg{
+        align-self: center;
+      }
+    }
+
+    i.hidden{
+      display: none;
+    }
+
+    &--link{
+      color: #888;
+      line-height: 3rem;
+      text-decoration: none;
+    }
+
+    &--danger{
+      background: #bf0711 !important;
+      border-color: #bf0711 !important;
+      color: #fff !important;
+
+      &:hover{
+        background: #a1030b !important;
+        border-color: #6d0308 !important;
+      }
+
+      &:disabled.button, &[disabled].button{
+        background: #a1030b !important;
+        border-color: #6d0308 !important;
+        color: #fff !important;
+        text-shadow: none !important;
+        opacity: .8;
+      }
+    }
+  }
+
+  &-error-message{
+    color: #bf0711;
+    line-height: 1.5rem;
+  }
+
+  &-accordion{
+    border: 1px solid #eee;
+    
+    &__title{
+      background: #ebebeb;
+      border-bottom: 1px solid #eee;
+      color: #555;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 40px;
+      margin: 0;
+      padding: 0 0 0 10px;
+
+      span{
+        display: inline-block;
+        margin-right: 5px;
+      }
+    }
+
+    &__info{
+      border-bottom: 1px solid #eee;
+      color: #888;
+      margin: -15px -15px 10px;
+      padding: .5rem 1rem;
+    }
+
+    &__body{
+      display: none;
+      padding: 15px;
+    }
+
+    &__section--active{
+      .gifthunt-accordion{
+        &__title{
+          background: #f5f5f5;
+          cursor: default;
+          font-weight: 400;
+
+          span{
+            transform: rotate(90deg);
+          }
+        }
+
+        &__body{
+          display: block;
+        }
+      }
+    }
+  }
+
+  &-session-list-info{
+    color: #888;
+    font-style: italic;
+    font-size: .7rem;
+  }
+}
+
+#gifthunt{
+  &-send-test-success-email{
+    max-width: 140px;
+  }
+
+  &-success-email-list{
+    list-style-type: square;
+    margin-left: 20px;
+
+    li{
+      margin-bottom: 20px;
+      
+      span{
+        font-family: 'Courier New', Courier, monospace;
+      }
+    }
+  }
+
+  &__icon-list{
+    display: flex;
+    flex-wrap: wrap;
+
+    label{
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      margin: 10px 10px 10px 0;
+
+      .gifthunt-icon-preview{
+        border: 2px solid #eee;
+        border-radius: 3px;
+        display: block;
+        height: 70px;
+        margin: 10px auto;
+        width: 70px;
+
+        img{
+          max-width: 70px;
+          width: 100%;
+        }
+
+        &:hover{
+          border: 2px solid #ccc;
+        }
+      }
+
+      input[type="radio"]:checked+.gifthunt-icon-preview{
+        border: 2px solid #007cb2;
+      }
+    }
+  }
+
+  &__icon-upload{
+    &-preview{
+      label{
+        display: none;
+      }
+
+      img{
+        max-width: 70px;
+      }
+
+      input[type="radio"]:checked+.gifthunt-icon-preview{
+        border: 2px solid #007cb2;
+      }
+    }
+
+    .gifthunt__icon-upload-button-column{
+      text-align: right;
+    }
+  }
+
+  &__icon-animation-list{
+    display: flex;
+    flex-wrap: wrap;
+
+    label{
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      margin: 10px 10px 10px 0;
+
+      .gifthunt-icon-animation-preview{
+        border: 2px solid #eee;
+        border-radius: 3px;
+        display: block;
+        height: 70px;
+        margin: 10px auto;
+        position: relative;
+        width: 70px;
+
+        &:hover{
+          border: 2px solid #ccc;
+        }
+
+        span{
+          background: #ddd;
+          border-radius: 30px;
+          display: block;
+          height: 30px;
+          margin: 20px auto;
+          width: 30px;
+        }
+
+        .pop{
+          animation-duration: 3s;
+          animation-iteration-count: infinite;
+          animation-name: pop;
+        }
+
+        .bounce{
+          animation-duration: 3s;
+          animation-iteration-count: infinite;
+          animation-name: bounce;
+        }
+
+        .shake{
+          animation-duration: 3s;
+          animation-iteration-count: infinite;
+          animation-name: shake;
+        }
+
+        .fade_left{
+          animation-duration: 3s;
+          animation-iteration-count: infinite;
+          animation-name: fade_left;
+        }
+
+        .fade_right{
+          animation-duration: 3s;
+          animation-iteration-count: infinite;
+          animation-name: fade_right;
+        }
+      }
+
+      input[type="radio"]:checked+.gifthunt-icon-animation-preview{
+        border: 2px solid #007cb2;
+
+        span{
+          background: #555;
+        }
+      }
+    }
+  }
+
+  &__popup-design-list{
+    display: flex;
+    flex-wrap: wrap;
+
+    label{
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      margin: 10px 10px 10px 0;
+
+      .gifthunt-popup-design-preview{
+        border: 2px solid #eee;
+        border-radius: 3px;
+        display: block;
+        height: 120px;
+        margin: 10px auto;
+        padding: 5px;
+        position: relative;
+        width: 80px;
+
+        &:hover{
+          border: 2px solid #ccc;
+        }
+
+        img{
+          width: 100%;
+        }
+      }
+      
+      input[type="radio"]:checked+.gifthunt-popup-design-preview{
+        border: 2px solid #007cb2;
+
+        span{
+          background: #555;
+        }
+      }
+    }
+  }
+
+  &__success-email-template-list{
+    display: flex;
+    flex-wrap: wrap;
+
+    label{
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      margin: 10px 10px 10px 0;
+
+      .gifthunt-success-email-template-preview{
+        border: 2px solid #eee;
+        border-radius: 3px;
+        display: block;
+        height: 55px;
+        margin: 10px auto;
+        padding: 5px;
+        position: relative;
+        width: 80px;
+
+        &:hover{
+          border: 2px solid #ccc;
+        }
+
+        img{
+          width: 100%;
+        }
+      }
+      
+      input[type="radio"]:checked+.gifthunt-popup-design-preview{
+        border: 2px solid #007cb2;
+
+        span{
+          background: #555;
+        }
+      }
+    }
+  }
+
+  &-placement-shortcode-info{
+    background: #fffcee;
+    border: 1px solid #ffe9e0;
+    border-radius: 3px;
+    padding: 1rem;
+  }
+
+  &-placement-shortcode{
+    background: #fff;
+    border: 1px solid #eaeaea;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 1rem auto;
+    width: 100%;
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0, 0)
+  }
+  10% {
+    transform: scale(1.5, 1.5)
+  }
+  15% {
+    transform: scale(.5, .5)
+  }
+  20% {
+    transform: scale(1.2, 1.2)
+  }
+  25% {
+    transform: scale(.8, .8)
+  }
+  30% {
+    transform: scale(1, 1)
+  }
+  89% {
+    transform: scale(1, 1)
+  }
+  90% {
+    transform: scale(1.2, 1.2)
+  }
+  100% {
+    transform: scale(1, 1)
+  }
+}
+
+@keyframes bounce {
+  0% {
+    margin-top: 20px;
+  }
+  5% {
+    margin-top: 0px;
+  }
+  10% {
+    margin-top: 20px;
+  }
+  15%{
+    margin-top: 5px;
+  }
+  20%{
+    margin-top: 20px;
+  }
+  25%{
+    margin-top: 10px;
+  }
+  30%{
+    margin-top: 20px;
+  }
+  35%{
+    margin-top: 15px;
+  }
+  40%{
+    margin-top: 20px;
+  }
+}
+
+@keyframes shake{
+  0%{
+    margin-left: 20px;
+  }
+  5%{
+    margin-left: 5px;
+  }
+  10%{
+    margin-left: 35px;
+  }
+  15%{
+    margin-left: 10px;
+  }
+  20%{
+    margin-left: 30px;
+  }
+  25%{
+    margin-left: 15px;
+  }
+  30%{
+    margin-left: 25px;
+  }
+  35%{
+    margin-left: 20px;
+  }
+}
+
+@keyframes fade_left{
+  0%{
+    margin-left: 0;
+    opacity: 0;
+  }
+  30%{
+    margin-left: 25px;
+    opacity: 1;
+  }
+  35%{
+    margin-left: 20px;
+  }
+}
+
+@keyframes fade_right{
+  0%{
+    margin-left: 40px;
+    opacity: 0;
+  }
+  30%{
+    margin-left: 15px;
+    opacity: 1;
+  }
+  35%{
+    margin-left: 20px;
+  }
+}
+
+@media only screen and (max-width: 600px){
+  .gifthunt-card__columns{
+    flex-direction: column;
+  }
+
+  .gifthunt-card__column{
+    padding: 0;
+  }
+}
+
+.gifthunt-spin {
+	animation: gifthunt_spin_animation 1s linear infinite;
+}
+
+@keyframes gifthunt_spin_animation {
+	100% {
+		-webkit-transform: rotate(360deg);
+		transform: rotate(360deg);
+	}
+}
+
+
+.gifthunt-hunters-list{
+  .gifthunt-page-actions{
+    max-width: 100%;
+
+    &--secondary{
+      align-items: center;
+      display: flex;
+
+      .button{
+        margin-left: 20px;
+      }
+    }
+
+    &--header{
+      padding-bottom: 0;
+    }
+  }
+
+  .button-delete-hunter{
+    font-weight: bold;
+  }
+
+  .subsubsub{
+    margin: 0 0 10px;
+  }
+
+  &__empty-state{
+    clear: both;
+    color: #888;
+    display: block;
+    font-size: 16px;
+    font-style: italic;
+    padding: 10px 0;
+    text-align: center;
+  }
+}
+
+.gifthunt-log-data{
+  display: block;
+  max-height: 200px;
+  overflow-y: scroll;
+}
+
+.subpage-notice{
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-left-width: 4px;
+  border-left-color: #00a0d2;
+  box-shadow: 0 1px 1px rgba(0,0,0,.04);
+  margin: 10px 0;
+  padding: 1px 12px;
+}
+
+#shortcode-preview-alert-close{
+  display: block;
+  margin: 0 auto 1rem;
+  min-width: 200px;
+}
+
+
+
+
+
+/**
+ * Fixed header CSS from default wp css
+ */
+
+@media (min-width: 782px) {
+  body.js.is-fullscreen-mode .edit-post-header {
+    transform: translateY(-100%);
+    animation: edit-post-fullscreen-mode__slide-in-animation 0.1s forwards; } }
+  @media (min-width: 782px) and (prefers-reduced-motion: reduce) {
+    body.js.is-fullscreen-mode .edit-post-header {
+      animation-duration: 1ms !important; } }
+
+@keyframes edit-post-fullscreen-mode__slide-in-animation {
+100% {
+  transform: translateY(0%); } }
+
+.edit-post-header {
+height: 50px;
+padding: 0;
+background: #f1f1f1;
+display: flex;
+z-index: 1100;
+left: 0;
+right: 0;
+top: 0;
+position: -webkit-sticky;
+position: sticky; }
+@media (min-width: 600px) {
+  .edit-post-header {
+    position: fixed;
+    padding: 5px 20px;
+    top: 46px; } }
+@media (min-width: 782px) {
+  .edit-post-header {
+    top: 32px; }
+    body.is-fullscreen-mode .edit-post-header {
+      top: 0; } }
+.edit-post-header .editor-post-switch-to-draft + .editor-post-preview {
+  display: none; }
+  @media (min-width: 600px) {
+    .edit-post-header .editor-post-switch-to-draft + .editor-post-preview {
+      display: inline-flex; } }
+.edit-post-header > .edit-post-header__settings {
+  order: 1; }
+  @supports ((position: -webkit-sticky) or (position: sticky)) {
+    .edit-post-header > .edit-post-header__settings {
+      order: initial; } }
+
+.edit-post-header {
+/* Set left position when auto-fold is not on the body element. */
+left: 0; }
+@media (min-width: 782px) {
+  .edit-post-header {
+    left: 160px; } }
+
+@media (min-width: 782px) {
+  .auto-fold .edit-post-header {
+    left: 36px; } }
+@media (min-width: 960px) {
+  .auto-fold .edit-post-header {
+    left: 160px; } }
+
+/* Sidebar manually collapsed. */
+.folded .edit-post-header {
+left: 0; }
+@media (min-width: 782px) {
+  .folded .edit-post-header {
+    left: 36px; } }
+
+/* Mobile menu opened. */
+@media (max-width: 782px) {
+.auto-fold .wp-responsive-open .edit-post-header {
+  left: 190px; } }
+
+/* In small screens with responsive menu expanded there is small white space. */
+@media (max-width: 600px) {
+.auto-fold .wp-responsive-open .edit-post-header {
+  margin-left: -18px; } }
+
+body.is-fullscreen-mode .edit-post-header {
+left: 0 !important; }
+
+.edit-post-header__settings {
+display: inline-flex;
+align-items: center; }
+
+.edit-post-header .components-button.is-toggled {
+color: #fff;
+background: #555d66;
+margin: 1px;
+padding: 7px; }
+
+.edit-post-header .components-button.is-toggled:hover, .edit-post-header .components-button.is-toggled:focus {
+box-shadow: 0 0 0 1px #555d66, inset 0 0 0 1px #fff !important;
+color: #fff !important;
+background: #555d66 !important; }
+
+.edit-post-header .components-button.editor-post-save-draft, .edit-post-header .components-button.editor-post-switch-to-draft, .edit-post-header .components-button.editor-post-preview, .edit-post-header .components-button.editor-post-publish-button, .edit-post-header .components-button.editor-post-publish-panel__toggle {
+margin: 2px;
+height: 33px;
+line-height: 32px;
+font-size: 13px; }
+
+.edit-post-header .components-button.editor-post-save-draft, .edit-post-header .components-button.editor-post-switch-to-draft {
+padding: 0 5px; }
+@media (min-width: 600px) {
+  .edit-post-header .components-button.editor-post-save-draft, .edit-post-header .components-button.editor-post-switch-to-draft {
+    padding: 0 12px; } }
+
+.edit-post-header .components-button.editor-post-preview, .edit-post-header .components-button.editor-post-publish-button, .edit-post-header .components-button.editor-post-publish-panel__toggle {
+padding: 0 5px 2px; }
+@media (min-width: 600px) {
+  .edit-post-header .components-button.editor-post-preview, .edit-post-header .components-button.editor-post-publish-button, .edit-post-header .components-button.editor-post-publish-panel__toggle {
+    padding: 0 12px 2px; } }
+
+@media (min-width: 782px) {
+.edit-post-header .components-button.editor-post-preview {
+  margin: 0 3px 0 12px; }
+.edit-post-header .components-button.editor-post-publish-button, .edit-post-header .components-button.editor-post-publish-panel__toggle {
+  margin: 0 12px 0 3px; } }
+
+.edit-post-fullscreen-mode-close__toolbar {
+display: none; }
+@media (min-width: 782px) {
+  .edit-post-fullscreen-mode-close__toolbar {
+    display: block;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 0;
+    margin: -9px 10px -9px -10px;
+    padding: 9px 10px; } }
+
+.edit-post-header-toolbar {
+display: inline-flex;
+align-items: center; }
+.edit-post-header-toolbar > .components-button {
+  display: none; }
+  @media (min-width: 600px) {
+    .edit-post-header-toolbar > .components-button {
+      display: inline-flex; } }
+.edit-post-header-toolbar .block-editor-block-navigation,
+.edit-post-header-toolbar .table-of-contents {
+  display: none; }
+  @media (min-width: 600px) {
+    .edit-post-header-toolbar .block-editor-block-navigation,
+    .edit-post-header-toolbar .table-of-contents {
+      display: flex; } }
+
+.edit-post-header-toolbar__block-toolbar {
+position: absolute;
+top: 56px;
+left: 0;
+right: 0;
+background: #fff;
+min-height: 37px;
+border-bottom: 1px solid #e2e4e7; }
+.edit-post-header-toolbar__block-toolbar .block-editor-block-toolbar .components-toolbar {
+  border-top: none;
+  border-bottom: none; }
+.is-sidebar-opened .edit-post-header-toolbar__block-toolbar {
+  display: none; }
+@media (min-width: 782px) {
+  .is-sidebar-opened .edit-post-header-toolbar__block-toolbar {
+    display: block;
+    right: 280px; } }
+@media (min-width: 1080px) {
+  .edit-post-header-toolbar__block-toolbar {
+    padding-left: 8px;
+    position: static;
+    left: auto;
+    right: auto;
+    background: none;
+    border-bottom: none;
+    min-height: auto; }
+    .is-sidebar-opened .edit-post-header-toolbar__block-toolbar {
+      right: auto; }
+    .edit-post-header-toolbar__block-toolbar .block-editor-block-toolbar {
+      margin: -9px 0; }
+    .edit-post-header-toolbar__block-toolbar .block-editor-block-toolbar .components-toolbar {
+      padding: 10px 4px 9px; } }
